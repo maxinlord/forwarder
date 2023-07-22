@@ -7,26 +7,35 @@ from aiogram.types import (
     ContentType,
     InputFile,
 )
-from config import CHAT, TOPIC_ID
+from config import CHAT_STORAGE, TOPIC_ID_VIDEO, TOPIC_ID_PHOTO
 from dispatcher import bot, dp
 from aiogram.dispatcher.filters import Command
 
 
-@dp.message_handler(Command("start"))
-async def start_message(message: Message):
-    id_user = message.from_user.id
+def chat_filter(chat: str):
+    def actdec(func):
+        async def wrapper(message: Message):
+            if message.chat.id == chat:
+                return
+            return await func(message)
+        return wrapper
 
-    await message.answer(message.chat.id)
-    # await message.answer('Привет, отправь мне файл')
+
+@dp.message_handler(Command("start"))
+@chat_filter(chat=CHAT_STORAGE)
+async def start_message(message: Message):
+    await message.answer("Привет, отправь мне файл")
 
 
 @dp.message_handler(content_types=ContentType.TEXT)
+@chat_filter(chat=CHAT_STORAGE)
 async def text_answer(message: Message):
-    await bot.send_message(message.chat.title)
+    await message.answer("Привет, отправь мне файл")
     # await message.answer(message)
 
 
 @dp.message_handler(content_types=[ContentType.DOCUMENT, ContentType.VIDEO])
+@chat_filter(chat=CHAT_STORAGE)
 async def get_file(message: Message):
     # if message.content_type == 'document':
     #     file_id = message.document.file_id
@@ -38,4 +47,10 @@ async def get_file(message: Message):
     #         caption=f'@{message.from_user.username}'
     #     )
     # else:
-    await message.forward(chat_id=CHAT, message_thread_id=TOPIC_ID)
+    await message.forward(chat_id=CHAT_STORAGE, message_thread_id=TOPIC_ID_VIDEO)
+
+
+@dp.message_handler(content_types=[ContentType.PHOTO])
+@chat_filter(chat=CHAT_STORAGE)
+async def get_photo(message: Message):
+    await message.forward(chat_id=CHAT_STORAGE, message_thread_id=TOPIC_ID_PHOTO)
