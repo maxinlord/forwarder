@@ -15,27 +15,27 @@ from aiogram.dispatcher.filters import Command
 def chat_filter(chat: str):
     def actdec(func):
         async def wrapper(message: Message):
-            if message.chat.id == chat:
-                return
-            return await func(message)
+            if message.chat.id != chat:
+                return await func(message)
+
         return wrapper
+
+    return actdec
 
 
 @dp.message_handler(Command("start"))
-@chat_filter(chat=CHAT_STORAGE)
 async def start_message(message: Message):
     await message.answer("Привет, отправь мне файл")
 
 
 @dp.message_handler(content_types=ContentType.TEXT)
-@chat_filter(chat=CHAT_STORAGE)
+@chat_filter(chat='CHAT_STORAGE')
 async def text_answer(message: Message):
     await message.answer("Привет, отправь мне файл")
     # await message.answer(message)
 
 
 @dp.message_handler(content_types=[ContentType.DOCUMENT, ContentType.VIDEO])
-@chat_filter(chat=CHAT_STORAGE)
 async def get_file(message: Message):
     # if message.content_type == 'document':
     #     file_id = message.document.file_id
@@ -51,6 +51,5 @@ async def get_file(message: Message):
 
 
 @dp.message_handler(content_types=[ContentType.PHOTO])
-@chat_filter(chat=CHAT_STORAGE)
 async def get_photo(message: Message):
     await message.forward(chat_id=CHAT_STORAGE, message_thread_id=TOPIC_ID_PHOTO)
